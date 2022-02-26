@@ -1,0 +1,77 @@
+"""
+Author: Zachary Ramirez, zrramire@purdue.edu
+Assignment: Project 3: GEARS Robot
+Date: 02/24/2022
+
+Description:
+    General code for maze pathfinding using proportional control to ]
+    maintain a set distance from the walls.
+
+Contributors:
+    https://github.com/DexterInd/BrickPi3
+    Used example code for reading in values from a LEGO Ultrasonic sensor
+
+My contributor(s) helped me:
+    [ ] understand the assignment expectations without
+        telling me how they will approach it.
+    [X] understand different ways to think about a solution
+        without helping me plan my solution.
+    [ ] think through the meaning of a specific error or
+        bug present in my code without looking at my code.
+    Note that if you helped somebody else with their code, you
+    have to list that person as a contributor.
+
+Academic Integrity Statement:
+    I have not used source code obtained from any unauthorized
+    source, either modified or unmodified; nor have I provided
+    another student access to my code.  The project I am
+    submitting is my own original work.
+"""
+
+from __future__ import print_function # use python 3 syntax but make it compatible with python 2
+from __future__ import division       #                           ''
+
+import time     # import the time library for the sleep function
+import brickpi3 # import the BrickPi3 drivers
+
+BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be the BrickPi3 object.
+
+# Configure for an EV3 color sensor.
+# BP.set_sensor_type configures the BrickPi3 for a specific sensor.
+# BP.PORT_1 specifies that the sensor will be on sensor port 1.
+# BP.Sensor_TYPE.EV3_ULTRASONIC_CM specifies that the sensor will be an EV3 ultrasonic sensor.
+
+BP.set_sensor_type(BP.PORT_1, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM) # Configure for an EV3 ultrasonic sensor.
+gain = float(input("Set a gain value for PID: "))
+wall_delta = float(input("Enter the robot's optimal distance form the wall in cm: "))
+speed = -1 * float(input("How fast should the robot move in DPS: "))
+# User input conditions for execution: USed until optimal values can be found
+try:
+    USED_PORT1 = BP.PORT_A
+    USED_PORT2 = BP.PORT_C
+    # Identify which motor ports on the pi are used
+    
+    ZeroPosition1 = BP.get_motor_encoder(USED_PORT1)
+    ZeroPosition2 = BP.get_motor_encoder(USED_PORT2)
+    
+    BP.offset_motor_encoder(USED_PORT1, ZeroPosition1)
+    BP.offset_motor_encoder(USED_PORT2, ZeroPosition2)
+    #Initialize and zero each motor
+    while True:
+        # BP.get_sensor retrieves a sensor value.
+        # BP.PORT_1 specifies that we are looking for the value of sensor port 1.
+        # BP.get_sensor returns the sensor value (what we want to display).
+        try:
+            value = BP.get_sensor(BP.PORT_1) # Reads sensor values in centimeters
+            correction = (wall_delta - value) * gain / wall_delta #Creates an adjusted error proportion for coerrection
+            
+            BP.set_motor_dps(USED_PORT1, speed)
+            BP.set_motor_dps(USED_PORT2, speed * (1- correction)) 
+            # Adjusts left motor speeds proportional to the distance from the wall
+        except brickpi3.SensorError as error:
+            print(error)
+        
+        time.sleep(0.02)  # delay for 0.02 seconds (20ms) to reduce the Raspberry Pi CPU load.
+
+except KeyboardInterrupt: # except the program gets interrupted by Ctrl+C on the keyboard.
+    BP.reset_all()        # Unconfigure the sensors, disable the motors, and restore the LED to the control of the BrickPi3 firmware.
