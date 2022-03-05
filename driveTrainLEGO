@@ -33,6 +33,7 @@ from __future__ import division       #                           ''
 
 import time     # import the time library for the sleep function
 import brickpi3 # import the BrickPi3 drivers
+import readGyro as gyro
 
 BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be the BrickPi3 object.
 
@@ -42,36 +43,49 @@ BP = brickpi3.BrickPi3() # Create an instance of the BrickPi3 class. BP will be 
 # BP.Sensor_TYPE.EV3_ULTRASONIC_CM specifies that the sensor will be an EV3 ultrasonic sensor.
 
 BP.set_sensor_type(BP.PORT_1, BP.SENSOR_TYPE.EV3_ULTRASONIC_CM) # Configure for an EV3 ultrasonic sensor.
+BP.set_sensor_type(BP.PORT_3, BP.SENSOR_TYPE.EV3_GYRO_ABS_DPS)  # Configure for an EV3 gyroscopic sensor
 gain = float(input("Set a gain value for PID: "))
 wall_delta = float(input("Enter the robot's optimal distance form the wall in cm: "))
 speed = -1 * float(input("How fast should the robot move in DPS: "))
-# User input conditions for execution: USed until optimal values can be found
+# User input conditions for execution: Used until optimal values can be found
+
 try:
-    USED_PORT1 = BP.PORT_A
-    USED_PORT2 = BP.PORT_C
+    
+    gyroPort = BP.PORT_3
+    ultraPort = BP.PORT_1
+    # Identify which sensor ports
+    
+    LEFT_MOTOR = BP.PORT_C
+    RIGHT_MOTOR = BP.PORT_A
     # Identify which motor ports on the pi are used
     
-    ZeroPosition1 = BP.get_motor_encoder(USED_PORT1)
-    ZeroPosition2 = BP.get_motor_encoder(USED_PORT2)
+    ZeroPosition1 = BP.get_motor_encoder(LEFT_MOTOR)
+    ZeroPosition2 = BP.get_motor_encoder(RIGHT_MOTOR)
     
-    BP.offset_motor_encoder(USED_PORT1, ZeroPosition1)
-    BP.offset_motor_encoder(USED_PORT2, ZeroPosition2)
-    #Initialize and zero each motor
+    BP.offset_motor_encoder(LEFT_MOTOR, ZeroPosition1)
+    BP.offset_motor_encoder(RIGHT_MOTOR, ZeroPosition2)
+    # Initialize and zero each motor
+    angle_delta = gyro.readGyro(gyroPort) 
+    angle_delta = angle_delta[0] + 90
+    # Initializes at an angle of 90 degrees
+    input("Please move the robot to its starting position: Press enter to proceed")
     while True:
-        # BP.get_sensor retrieves a sensor value.
-        # BP.PORT_1 specifies that we are looking for the value of sensor port 1.
-        # BP.get_sensor returns the sensor value (what we want to display).
         try:
-            value = BP.get_sensor(BP.PORT_1) # Reads sensor values in centimeters
-            correction = (wall_delta - value) * gain / wall_delta #Creates an adjusted error proportion for coerrection
+            dist = BP.get_sensor(ultraPort)
+            turnAngle = gyro.readGyro(gyroPort) 
+            turnAngle = turnAngle[0] + 90
+            # Reads sensor values from the gyro and ultrasonic sensors
             
-            BP.set_motor_dps(USED_PORT1, speed)
-            BP.set_motor_dps(USED_PORT2, speed * (1- correction)) 
-            # Adjusts left motor speeds proportional to the distance from the wall
+            correction = (dist - wall_delta) / wall_delta * (turnAngle - angle_delta) / angle_delta * gain 
+            # Creates an error proprotion based on
+            
+            BP.set_motor_dps(LEFT_MOTOR, speed * (1 - correction))
+            BP.set_motor_dps(RIGHT_MOTOR, speed * (1 + correction)) 
+                
         except brickpi3.SensorError as error:
             print(error)
         
-        time.sleep(0.02)  # delay for 0.02 seconds (20ms) to reduce the Raspberry Pi CPU load.
+        time.sleep(0.02)  # Delay for 0.02 seconds (20ms) to reduce the Raspberry Pi CPU load.
 
 except KeyboardInterrupt: # except the program gets interrupted by Ctrl+C on the keyboard.
     BP.reset_all()        # Unconfigure the sensors, disable the motors, and restore the LED to the control of the BrickPi3 firmware.
