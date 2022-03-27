@@ -32,20 +32,22 @@ try:
                 angle_delta = BP.get_sensor(GYRO_PORT)   # print the gyro sensor values
                 angle_delta = angle_delta[0] + 90
                 wall_delta = grovepi.ultrasonicRead(GUIDE_PORT)
-                if (wall_delta > 60):
+                if (wall_delta > 30):
                     break
                 
-                correction = (wall_delta - optimalUlt) / optimalUlt * (optimalGyro - angle_delta) / optimalGyro * gain
+                correction = (wall_delta - optimalUlt) / optimalUlt * (optimalGyro - angle_delta) / optimalGyro
             
                 BP.set_motor_dps(OUTER, speed * (1 - correction))
                 BP.set_motor_dps(INNER, speed)
-
+                
+                time.sleep(0.02)  # delay for 0.02 seconds (20ms) to reduce the Raspberry Pi CPU load.
             except brickpi3.SensorError as error:
                 print(error)
 
-        turn(90)
-
-        time.sleep(0.02)  # delay for 0.02 seconds (20ms) to reduce the Raspberry Pi CPU load.
-
+        print("turning")
+        BP.set_motor_dps(OUTER, speed)
+        BP.set_motor_dps(INNER, speed)
+        time.sleep(1)
+        
 except KeyboardInterrupt: # except the program gets interrupted by Ctrl+C on the keyboard.
     BP.reset_all()        # Unconfigure the sensors, disable the motors, and restore the LED to the control of the BrickPi3 firmware.
