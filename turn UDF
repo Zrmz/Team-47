@@ -43,3 +43,40 @@ def turn(angle):
 
 angle = float(input("Enter the angle in degrees for the robot to turn to"))
 turn(angle)
+
+
+#Proportional turning code:
+
+def turn(angle):
+    
+    LEFT = BP.PORT_D
+    RIGHT = BP.PORT_A
+    GYRO_PORT = BP.PORT_1
+
+    current_angle = BP.get_sensor(GYRO_PORT)
+    desired_angle = current_angle + angle
+    
+    GAIN = 2
+    timer = 0
+    
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    time.sleep(0.5)
+    
+    #keeps turning until two seconds have passed AND the angle is accurate to within 1 degree
+    while (abs(current_angle - desired_angle) > 1) or (timer < 2): 
+    #timer is in seconds and represents the minimum time to come to a stop
+        
+        current_angle = BP.get_sensor(GYRO_PORT)
+        BP.set_motor_dps(LEFT, GAIN * (current_angle - angle))
+        BP.set_motor_dps(RIGHT, GAIN * (angle - current_angle))
+        time.sleep(.1)
+        timer += .1
+    
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    
+    return
+
+angle = float(input("Enter the angle in degrees for the robot to turn to"))
+turn(angle)
