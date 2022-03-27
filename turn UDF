@@ -1,0 +1,16 @@
+def turn(angle):
+    
+    LEFT = BP.PORT_D
+    RIGHT = BP.PORT_A
+    
+    zeroLeft = BP.get_motor_encoder(Left)
+    zeroRight = BP.get_motor_encoder(Right)
+    
+    BP.offset_motor_encoder(LEFT, zeroLeft)
+    BP.offset_motor_encoder(RIGHT, zeroRight)
+    BP.set_motor_position(LEFT, 1.8 * angle)
+    BP.set_motor_position(RIGHT, -1.8 * angle)
+    return
+
+angle = float(input("Enter the angle in degrees for the robot to turn to"))
+turn(angle)
