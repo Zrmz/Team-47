@@ -33,9 +33,9 @@ def turn(angle):
     BP.set_motor_dps(LEFT, 0)
     BP.set_motor_dps(RIGHT, 0)
     time.sleep(0.5)
-    BP.set_motor_dps(LEFT, 180 * angle / abs(angle))
-    BP.set_motor_dps(RIGHT, -180 * angle / abs(angle))
-    time.sleep(FACTOR * abs(angle) / 180)
+    BP.set_motor_dps(LEFT, 180 * angle / abs(angle)) #the 180 is the speed in DPS. Feel free to adjust it.
+    BP.set_motor_dps(RIGHT, -180 * angle / abs(angle)) # ^ same as there.
+    time.sleep(FACTOR * abs(angle) / 180) #DO NOT ADJUST THIS 180. It represents half a circle and should not be violated.
     BP.set_motor_dps(LEFT, 0)
     BP.set_motor_dps(RIGHT, 0)
     
