@@ -8,14 +8,37 @@ def turn(angle):
     
     LEFT = BP.PORT_D
     RIGHT = BP.PORT_A
+    FACTOR = 1.8 #(Theoretically 1.67, but likely higher, between 1.8 and 2.0)
     
     zeroLeft = BP.get_motor_encoder(Left)
     zeroRight = BP.get_motor_encoder(Right)
     
+    #Turning option 1 (constant power)
     BP.offset_motor_encoder(LEFT, zeroLeft)
     BP.offset_motor_encoder(RIGHT, zeroRight)
-    BP.set_motor_position(LEFT, 1.8 * angle)
-    BP.set_motor_position(RIGHT, -1.8 * angle)
+    BP.set_motor_position(LEFT, FACTOR * angle)
+    BP.set_motor_position(RIGHT, -1 * FACTOR * angle)
+    
+    #turning option 2 (constant time, adjustable speed)
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    time.sleep(0.5)
+    BP.set_motor_dps(LEFT, FACTOR * angle)
+    BP.set_motor_dps(RIGHT, -1 * FACTOR * angle)
+    time.sleep(1)
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    
+    #turning option 3 (constant adjustable speed)
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    time.sleep(0.5)
+    BP.set_motor_dps(LEFT, 180 * angle / abs(angle))
+    BP.set_motor_dps(RIGHT, -180 * angle / abs(angle))
+    time.sleep(FACTOR * abs(angle) / 180)
+    BP.set_motor_dps(LEFT, 0)
+    BP.set_motor_dps(RIGHT, 0)
+    
     return
 
 angle = float(input("Enter the angle in degrees for the robot to turn to"))
