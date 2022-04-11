@@ -1,0 +1,21 @@
+import numpy as np
+
+lengthArray = 100
+matrix = np.zeros([lengthArray, lengthArray], dtype = int)
+
+x = lengthArray / 2
+y = 2
+rightCount = 0
+leftCount = 0
+
+index = x + (lengthArray * y)
+matrix.put(index, 1)
+
+print(matrix)
+
+try:
+    while True:
+        try:
+            if #event is turn right#:
+                leftCount = leftCount + 1
+                
